@@ -66,7 +66,7 @@ http://dev.eclipse.org/viewsvn/index.cgi/trunk/org.eclipse.buckminster.releng/bu
 
 	<property name="buildsPath" location="${hudsonWorkSpacePath}/build" />
 	<property name="resultP2Site" location="/jobs/genie.teneo/emf-teneo-nightly/lastSuccessful/archive/build/result/p2site" />	
-	<property name="gitPath" location="${hudsonWorkSpacePath}/git" />
+	<property name="gitPath" location="${hudsonWorkSpacePath}" />
 
 	<!--property name="rootPath" location="${buildsPath}/${build.type}${buildTimestamp}"/-->
 	<property name="rootPath" location="${buildsPath}" />
@@ -107,10 +107,12 @@ http://dev.eclipse.org/viewsvn/index.cgi/trunk/org.eclipse.buckminster.releng/bu
 
 		<echo message="Building" />
 		<ant dir="${basedir}/build" antfile="teneo_build.xml" target="run" inheritRefs="true" />
-
+		
+		<echo message="Skipping tests.." />
+		<!--
 		<echo message="Testing" />
 		<ant dir="${basedir}/test" antfile="teneo_test.xml" target="run" inheritRefs="true" />
-
+		-->
 		<computeVersionQualifier directory="${rootPath}/output/org.eclipse.emf.teneo_${teneo.version}-osgi.bundle/jar" pattern="org.eclipse.emf.teneo*.jar"/>
 
 		<echo message="Creating maven jars with versionQualifier ${versionQualifier}" />
