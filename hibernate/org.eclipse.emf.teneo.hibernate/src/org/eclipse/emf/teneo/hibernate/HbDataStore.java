@@ -1074,8 +1074,6 @@ public abstract class HbDataStore implements DataStore, AuditDataStore {
 		hmg.setPersistenceOptions(po);
 		final String hbm = hmg.generateToString(getPaModel());
 
-		// System.err.println(hbm);
-
 		if (log.isDebugEnabled()) {
 			log.debug("Computing id types of mapped EClasses");
 		}

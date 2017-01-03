@@ -275,7 +275,6 @@ public class HbEntityDataStore extends HbDataStore implements EntityManagerFacto
 			// TODO replace this
 			final StringBufferInputStream is = new StringBufferInputStream(getMappingXML());
 
-			System.err.println(getMappingXML());
 
 			getConfiguration().addInputStream(is);
 		}
