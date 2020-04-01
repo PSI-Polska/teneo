@@ -31,9 +31,9 @@ import org.eclipse.emf.teneo.hibernate.HbMapperException;
 import org.eclipse.emf.teneo.util.FieldUtil;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.property.Getter;
-import org.hibernate.property.Setter;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.Setter;
 
 /**
  * Implements the setter for the eContainerFeatureID member of an EObject.
@@ -54,7 +54,7 @@ public class EContainerFeatureIDPropertyHandler implements Getter, Setter, Exten
 	private Field ecField;
 
 	/** Constructor */
-	public void initialize(String field) {
+	public void initialize() {
 		ecField = FieldUtil.getField(EObjectImpl.class, "eContainerFeatureID");
 		if (log.isDebugEnabled()) {
 			log.debug("Created eContainerFeatureID handler");
@@ -127,7 +127,7 @@ public class EContainerFeatureIDPropertyHandler implements Getter, Setter, Exten
 	 * org.hibernate.engine.SessionImplementor)
 	 */
 	@SuppressWarnings("rawtypes")
-	public Object getForInsert(Object owner, Map mergeMap, SessionImplementor session)
+	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return new Integer(((BasicEObjectImpl) owner).eContainerFeatureID());
 	}

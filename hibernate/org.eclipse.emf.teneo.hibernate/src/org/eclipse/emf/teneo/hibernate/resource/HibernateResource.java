@@ -48,7 +48,7 @@ import org.eclipse.emf.teneo.util.AssertUtil;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.metadata.ClassMetadata;
 
@@ -387,7 +387,8 @@ public class HibernateResource extends StoreResource implements HbResource {
 					continue;
 				}
 
-				if (IdentifierUtil.getID(obj, (SessionImplementor) mySessionWrapper.getHibernateSession()) != null) // persisted
+				if (IdentifierUtil.getID(obj,
+						(SharedSessionContractImplementor) mySessionWrapper.getHibernateSession()) != null) // persisted
 				// object
 				{
 					if (eobj.eDirectResource() == null || eobj.eDirectResource() == this) {

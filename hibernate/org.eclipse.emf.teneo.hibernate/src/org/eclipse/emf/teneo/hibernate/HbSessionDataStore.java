@@ -49,8 +49,6 @@ import org.hibernate.service.ServiceRegistry;
  * @author <a href="mailto:mtaal@elver.org">Martin Taal</a>
  * @version $Revision: 1.32 $
  */
-
-@SuppressWarnings("unchecked")
 public class HbSessionDataStore extends HbBaseSessionDataStore {
 
 	private static final long serialVersionUID = 1L;
@@ -167,7 +165,7 @@ public class HbSessionDataStore extends HbBaseSessionDataStore {
 	/** Return the Classmappings as an iterator */
 	@Override
 	public Iterator<?> getClassMappings() {
-		return getConfiguration().getClassMappings();
+		return getMappings().getEntityBindings().iterator();
 	}
 
 	/** Build the mappings in the configuration */

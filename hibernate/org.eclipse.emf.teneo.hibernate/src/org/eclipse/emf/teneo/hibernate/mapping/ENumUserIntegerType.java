@@ -13,7 +13,7 @@ import org.eclipse.emf.teneo.classloader.StoreClassLoadException;
 import org.eclipse.emf.teneo.hibernate.HbMapperException;
 import org.eclipse.emf.teneo.hibernate.mapper.HbMapperConstants;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Stores a java enum
@@ -37,7 +37,8 @@ public class ENumUserIntegerType extends ENumUserType {
 	 * java.lang.Object)
 	 */
 	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor sessionImplementor,
+	public Object nullSafeGet(ResultSet rs, String[] names,
+			SharedSessionContractImplementor sessionImplementor,
 			Object owner) throws HibernateException, SQLException {
 		final int value = rs.getInt(names[0]);
 		if (rs.wasNull())
@@ -68,7 +69,7 @@ public class ENumUserIntegerType extends ENumUserType {
 	 */
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index,
-			SessionImplementor sessionImplementor) throws HibernateException, SQLException {
+			SharedSessionContractImplementor sessionImplementor) throws HibernateException, SQLException {
 		if (value == null) {
 			st.setNull(index, Types.INTEGER);
 		} else {

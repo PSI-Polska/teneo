@@ -24,12 +24,12 @@ import org.eclipse.emf.teneo.extension.ExtensionPoint;
 import org.eclipse.emf.teneo.hibernate.HbDataStore;
 import org.eclipse.emf.teneo.util.StoreUtil;
 import org.hibernate.HibernateException;
-import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.Setter;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.Setter;
 
 /**
  * The property handler which takes care of setting/getting property values.
@@ -38,31 +38,12 @@ import org.hibernate.property.Setter;
  * @version $Revision: 1.11 $
  */
 @SuppressWarnings("unchecked")
-public class EAVPropertyHandler implements Getter, Setter, PropertyAccessor, ExtensionPoint {
+public class EAVPropertyHandler
+		implements Getter, Setter, PropertyAccess, PropertyAccessStrategy, ExtensionPoint {
 
 	private static final long serialVersionUID = -3712366809398761331L;
 
 	private HbDataStore hbDataStore = null;
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.hibernate.property.PropertyAccessor#getGetter(java.lang.Class, java.lang.String)
-	 */
-	@SuppressWarnings("rawtypes")
-	public Getter getGetter(Class theClass, String propertyName) throws PropertyNotFoundException {
-		return this;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.hibernate.property.PropertyAccessor#getSetter(java.lang.Class, java.lang.String)
-	 */
-	@SuppressWarnings("rawtypes")
-	public Setter getSetter(Class theClass, String propertyName) throws PropertyNotFoundException {
-		return this;
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -97,7 +78,7 @@ public class EAVPropertyHandler implements Getter, Setter, PropertyAccessor, Ext
 	 * org.hibernate.engine.SessionImplementor)
 	 */
 	@SuppressWarnings("rawtypes")
-	public Object getForInsert(Object owner, Map mergeMap, SessionImplementor session)
+	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return get(owner);
 	}
@@ -387,5 +368,21 @@ public class EAVPropertyHandler implements Getter, Setter, PropertyAccessor, Ext
 
 	public void setHbDataStore(HbDataStore hbDataStore) {
 		this.hbDataStore = hbDataStore;
+	}
+
+	public Getter getGetter() {
+		return this;
+	}
+
+	public Setter getSetter() {
+		return this;
+	}
+
+	public PropertyAccessStrategy getPropertyAccessStrategy() {
+		return this;
+	}
+
+	public PropertyAccess buildPropertyAccess(Class arg0, String arg1) {
+		return this;
 	}
 }

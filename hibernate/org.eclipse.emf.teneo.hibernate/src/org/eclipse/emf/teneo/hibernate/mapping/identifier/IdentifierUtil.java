@@ -27,7 +27,7 @@ import org.eclipse.emf.teneo.classloader.StoreClassLoadException;
 import org.eclipse.emf.teneo.hibernate.HbDataStore;
 import org.eclipse.emf.teneo.hibernate.HbMapperException;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.persister.entity.EntityPersister;
@@ -58,7 +58,7 @@ public class IdentifierUtil {
 	/**
 	 * Returns the identifiertype on the basis of the class of the passed object
 	 */
-	public static Type getIdentifierType(String className, SessionImplementor session) {
+	public static Type getIdentifierType(String className, SharedSessionContractImplementor session) {
 		Type type = identifierTypeCache.get(className);
 		if (type != null) {
 			return type;
@@ -71,14 +71,15 @@ public class IdentifierUtil {
 	}
 
 	/** Converts an id to a string representation */
-	public static String idToString(Object object, SessionImplementor session) {
+	public static String idToString(Object object, SharedSessionContractImplementor session) {
 
 		return createIDString(getIdentifierType(object.getClass().getName(), session),
 				getID(object, session));
 	}
 
 	/** String to id */
-	public static Serializable stringToId(String className, SessionImplementor Session, String idStr) {
+	public static Serializable stringToId(String className, SharedSessionContractImplementor Session,
+			String idStr) {
 		return extractID(getIdentifierType(className, Session), idStr);
 	}
 
@@ -124,7 +125,8 @@ public class IdentifierUtil {
 	}
 
 	/** Returns the id of the passed object */
-	public static Serializable getID(EObject eobj, HbDataStore hd, SessionImplementor session) {
+	public static Serializable getID(EObject eobj, HbDataStore hd,
+			SharedSessionContractImplementor session) {
 		final String entityName = hd.toEntityName(eobj.eClass());
 		final EntityPersister entityPersister = ((SessionFactoryImpl) hd.getSessionFactory())
 				.getEntityPersister(entityName);
@@ -132,7 +134,7 @@ public class IdentifierUtil {
 	}
 
 	/** Returns the id of the passed object */
-	public static Serializable getID(Object object, SessionImplementor session) {
+	public static Serializable getID(Object object, SharedSessionContractImplementor session) {
 		Serializable id = session.getContextEntityIdentifier(object);
 		if (id != null) {
 			return id;

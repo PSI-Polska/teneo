@@ -33,7 +33,7 @@ import org.eclipse.emf.teneo.hibernate.tuplizer.EMFTuplizer;
 import org.eclipse.emf.teneo.util.StoreUtil;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.property.PropertyAccessor;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
@@ -57,7 +57,8 @@ public class FeatureMapEntryTuplizer extends EMFTuplizer {
 
 	/** Creates an EMF Instantiator */
 	@Override
-	protected Instantiator buildInstantiator(PersistentClass persistentClass) {
+	protected Instantiator buildInstantiator(EntityMetamodel entityMetamodel,
+			PersistentClass persistentClass) {
 		return new FeatureMapEntryInstantiator(persistentClass);
 	}
 
@@ -83,7 +84,7 @@ public class FeatureMapEntryTuplizer extends EMFTuplizer {
 
 	/** Returns the correct accessor on the basis of the type of property */
 	@Override
-	protected PropertyAccessor getPropertyAccessor(Property mappedProperty, PersistentClass pc) {
+	protected PropertyAccess getPropertyAccessor(Property mappedProperty, PersistentClass pc) {
 		final HbDataStore hds = HbHelper.INSTANCE.getDataStore(pc);
 		if (mappedProperty.getMetaAttribute(HbMapperConstants.VERSION_META) != null) {
 			return hds.getHbContext().createVersionAccessor();

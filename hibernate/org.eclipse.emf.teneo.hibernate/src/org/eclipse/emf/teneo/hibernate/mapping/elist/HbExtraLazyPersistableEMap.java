@@ -34,7 +34,7 @@ import org.hibernate.Session;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.internal.PersistentList;
 import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.type.EntityType;
 
@@ -88,7 +88,7 @@ public class HbExtraLazyPersistableEMap<K, V> extends HibernatePersistableEMap<K
 
 			// create a query
 			final AbstractPersistentCollection collection = (AbstractPersistentCollection) getDelegate();
-			final CollectionEntry collectionEntry = ((SessionImplementor) session)
+			final CollectionEntry collectionEntry = ((SharedSessionContractImplementor) session)
 					.getPersistenceContext().getCollectionEntry(collection);
 			final AbstractCollectionPersister persister = (AbstractCollectionPersister) collectionEntry
 					.getLoadedPersister();
@@ -189,7 +189,7 @@ public class HbExtraLazyPersistableEMap<K, V> extends HibernatePersistableEMap<K
 
 	private Session getSession() {
 		final AbstractPersistentCollection persistentCollection = (AbstractPersistentCollection) getDelegate();
-		final SessionImplementor session = ((AbstractPersistentCollection) persistentCollection)
+		final SharedSessionContractImplementor session = ((AbstractPersistentCollection) persistentCollection)
 				.getSession();
 		return (Session) session;
 	}

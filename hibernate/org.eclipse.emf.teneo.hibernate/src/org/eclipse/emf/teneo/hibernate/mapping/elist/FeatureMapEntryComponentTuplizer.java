@@ -31,9 +31,9 @@ import org.eclipse.emf.teneo.util.StoreUtil;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Property;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.component.AbstractComponentTuplizer;
 
@@ -59,16 +59,14 @@ public class FeatureMapEntryComponentTuplizer extends AbstractComponentTuplizer 
 	}
 
 	protected Getter buildGetter(Component component, Property prop) {
-		return getPropertyAccessor(prop, component).getGetter(component.getComponentClass(),
-				prop.getName());
+		return getPropertyAccessor(prop, component).getGetter();
 	}
 
 	protected Setter buildSetter(Component component, Property prop) {
-		return getPropertyAccessor(prop, component).getSetter(component.getComponentClass(),
-				prop.getName());
+		return getPropertyAccessor(prop, component).getSetter();
 	}
 
-	protected PropertyAccessor getPropertyAccessor(Property mappedProperty, Component component) {
+	protected PropertyAccess getPropertyAccessor(Property mappedProperty, Component component) {
 		final HbDataStore hds = HbHelper.INSTANCE.getDataStore(component.getOwner());
 		if (mappedProperty.getMetaAttribute(HbMapperConstants.VERSION_META) != null) {
 			return hds.getHbContext().createVersionAccessor();

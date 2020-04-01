@@ -45,11 +45,9 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Subclass;
-import org.hibernate.metamodel.binding.AttributeBinding;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.Instantiator;
@@ -159,7 +157,8 @@ public class EAVObjectTuplizer extends AbstractEntityTuplizer {
 
 	/** Creates an EMF Instantiator */
 	@Override
-	protected Instantiator buildInstantiator(PersistentClass persistentClass) {
+	protected Instantiator buildInstantiator(EntityMetamodel entityMetamodel,
+			PersistentClass persistentClass) {
 		if (persistentClass.getEntityName().equals(Constants.EAV_EOBJECT_ENTITY_NAME)) {
 			return null;
 		}
@@ -183,8 +182,7 @@ public class EAVObjectTuplizer extends AbstractEntityTuplizer {
 		if (mappedProperty.getName().equals("values")) {
 			return mappedProperty.getGetter(EObjectImpl.class);
 		}
-		return getPropertyAccessor(mappedProperty, mappedEntity).getGetter(null,
-				mappedProperty.getName());
+		return getPropertyAccessor(mappedProperty, mappedEntity).getGetter();
 	}
 
 	/*
@@ -198,8 +196,7 @@ public class EAVObjectTuplizer extends AbstractEntityTuplizer {
 		if (mappedProperty.getName().equals("values")) {
 			return mappedProperty.getSetter(EObjectImpl.class);
 		}
-		return getPropertyAccessor(mappedProperty, mappedEntity).getSetter(null,
-				mappedProperty.getName());
+		return getPropertyAccessor(mappedProperty, mappedEntity).getSetter();
 	}
 
 	/*
@@ -224,7 +221,7 @@ public class EAVObjectTuplizer extends AbstractEntityTuplizer {
 
 		// get all the interfaces from the main class, add the real interface
 		// first
-		final Set<Class<?>> proxyInterfaces = new LinkedHashSet<Class<?>>();
+		final Set<Class> proxyInterfaces = new LinkedHashSet<Class>();
 		final Class<?> pInterface = persistentClass.getProxyInterface();
 		if (pInterface != null) {
 			proxyInterfaces.add(pInterface);
@@ -261,7 +258,7 @@ public class EAVObjectTuplizer extends AbstractEntityTuplizer {
 				: ReflectHelper.getMethod(pInterface, theIdSetterMethod);
 
 		ProxyFactory pf = Environment.getBytecodeProvider().getProxyFactoryFactory()
-				.buildProxyFactory();
+				.buildProxyFactory(getFactory());
 		try {
 			pf.postInstantiate(getEntityName(), mappedClass, proxyInterfaces, proxyGetIdentifierMethod,
 					proxySetIdentifierMethod,
@@ -311,33 +308,8 @@ public class EAVObjectTuplizer extends AbstractEntityTuplizer {
 	}
 
 	/** Returns the correct accessor on the basis of the type of property */
-	protected PropertyAccessor getPropertyAccessor(Property mappedProperty, PersistentClass pc) {
+	protected PropertyAccess getPropertyAccessor(Property mappedProperty, PersistentClass pc) {
 		final HbDataStore ds = HbHelper.INSTANCE.getDataStore(pc);
 		return HbUtil.getPropertyAccessor(mappedProperty, ds, pc.getEntityName(), null);
-	}
-
-	@Override
-	protected Getter buildPropertyGetter(AttributeBinding mappedProperty) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	protected Setter buildPropertySetter(AttributeBinding mappedProperty) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	protected Instantiator buildInstantiator(EntityBinding mappingInfo) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	protected ProxyFactory buildProxyFactory(EntityBinding mappingInfo, Getter idGetter,
-			Setter idSetter) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

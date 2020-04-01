@@ -37,6 +37,7 @@ import org.eclipse.emf.teneo.util.FieldUtil;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Transaction;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 /**
  * Intercepts the getEntityName call to return the EClass name as the entity name.
@@ -175,7 +176,7 @@ public class EMFInterceptor extends EmptyInterceptor implements ExtensionPoint,
 
 	@Override
 	public void afterTransactionCompletion(Transaction tx) {
-		if (tx == null || tx.wasCommitted()) {
+		if (tx == null || tx.getStatus() == TransactionStatus.COMMITTED) {
 			if (deletedEObjects.get() != null) {
 				try {
 					for (EObject eObject : deletedEObjects.get()) {

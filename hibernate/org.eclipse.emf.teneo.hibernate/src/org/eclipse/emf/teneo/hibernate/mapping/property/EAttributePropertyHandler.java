@@ -30,12 +30,12 @@ import org.eclipse.emf.teneo.hibernate.mapping.identifier.IdentifierCacheHandler
 import org.eclipse.emf.teneo.util.AssertUtil;
 import org.eclipse.emf.teneo.util.StoreUtil;
 import org.hibernate.HibernateException;
-import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.Setter;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.Setter;
 
 /**
  * Is a getter and setter for EMF eattribute which uses eGet and eSet.Handles many==false
@@ -49,7 +49,8 @@ import org.hibernate.property.Setter;
  * @author <a href="mailto:mtaal@elver.org">Martin Taal</a>
  * @version $Revision: 1.20 $
  */
-public class EAttributePropertyHandler implements Getter, Setter, PropertyAccessor {
+public class EAttributePropertyHandler
+		implements Getter, Setter, PropertyAccess, PropertyAccessStrategy {
 	/**
 	 * Generated Serial Version ID
 	 */
@@ -102,26 +103,6 @@ public class EAttributePropertyHandler implements Getter, Setter, PropertyAccess
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.hibernate.property.PropertyAccessor#getGetter(java.lang.Class, java.lang.String)
-	 */
-	@SuppressWarnings("rawtypes")
-	public Getter getGetter(Class theClass, String propertyName) throws PropertyNotFoundException {
-		return this;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.hibernate.property.PropertyAccessor#getSetter(java.lang.Class, java.lang.String)
-	 */
-	@SuppressWarnings("rawtypes")
-	public Setter getSetter(Class theClass, String propertyName) throws PropertyNotFoundException {
-		return this;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see org.hibernate.property.Getter#get(java.lang.Object)
 	 */
 	public Object get(Object owner) throws HibernateException {
@@ -141,7 +122,7 @@ public class EAttributePropertyHandler implements Getter, Setter, PropertyAccess
 	 * org.hibernate.engine.SessionImplementor)
 	 */
 	@SuppressWarnings("rawtypes")
-	public Object getForInsert(Object arg0, Map arg1, SessionImplementor arg2)
+	public Object getForInsert(Object arg0, Map arg1, SharedSessionContractImplementor arg2)
 			throws HibernateException {
 		return get(arg0);
 	}
@@ -371,6 +352,22 @@ public class EAttributePropertyHandler implements Getter, Setter, PropertyAccess
 
 	public void setId(boolean isId) {
 		this.isId = isId;
+	}
+
+	public Getter getGetter() {
+		return this;
+	}
+
+	public Setter getSetter() {
+		return this;
+	}
+
+	public PropertyAccessStrategy getPropertyAccessStrategy() {
+		return this;
+	}
+
+	public PropertyAccess buildPropertyAccess(Class arg0, String arg1) {
+		return this;
 	}
 
 }

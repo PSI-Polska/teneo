@@ -28,9 +28,9 @@ import org.eclipse.emf.teneo.hibernate.HbUtil;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.component.AbstractComponentTuplizer;
 
@@ -92,7 +92,7 @@ public class EMFComponentTuplizer extends AbstractComponentTuplizer {
 	 */
 	@Override
 	protected Getter buildGetter(Component component, Property mappedProperty) {
-		return getPropertyAccessor(mappedProperty, component).getGetter(null, mappedProperty.getName());
+		return getPropertyAccessor(mappedProperty, component).getGetter();
 	}
 
 	/*
@@ -103,11 +103,11 @@ public class EMFComponentTuplizer extends AbstractComponentTuplizer {
 	 */
 	@Override
 	protected Setter buildSetter(Component component, Property mappedProperty) {
-		return getPropertyAccessor(mappedProperty, component).getSetter(null, mappedProperty.getName());
+		return getPropertyAccessor(mappedProperty, component).getSetter();
 	}
 
 	/** Returns the correct accessor on the basis of the type of property */
-	public PropertyAccessor getPropertyAccessor(Property mappedProperty, Component comp) {
+	public PropertyAccess getPropertyAccessor(Property mappedProperty, Component comp) {
 		final HbDataStore ds = HbHelper.INSTANCE.getDataStore(comp);
 		return HbUtil.getPropertyAccessor(mappedProperty, ds, comp.getComponentClassName(),
 				getEClass(comp));

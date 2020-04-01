@@ -38,7 +38,7 @@ import org.hibernate.Session;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.internal.PersistentList;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * The emap which initializes itself from the persistent collection when first accessed.
@@ -248,7 +248,7 @@ public class EAVDelegatingEMap<K, V> implements EMap<K, V>, EAVDelegatingList,
 	public V get(Object key) {
 		if (isExtraLazyAndNotInitialized()) {
 			final AbstractPersistentCollection persistentCollection = (AbstractPersistentCollection) getDelegate();
-			final SessionImplementor sessionImplementor = ((AbstractPersistentCollection) persistentCollection)
+			final SharedSessionContractImplementor sessionImplementor = ((AbstractPersistentCollection) persistentCollection)
 					.getSession();
 			final Session session = (Session) sessionImplementor;
 			session.flush();
@@ -550,12 +550,12 @@ public class EAVDelegatingEMap<K, V> implements EMap<K, V>, EAVDelegatingList,
 			return false;
 		}
 		final AbstractPersistentCollection persistentCollection = (AbstractPersistentCollection) getDelegate();
-		final SessionImplementor session = ((AbstractPersistentCollection) persistentCollection)
+		final SharedSessionContractImplementor session = ((AbstractPersistentCollection) persistentCollection)
 				.getSession();
 		return isConnectedToSession(session);
 	}
 
-	private final boolean isConnectedToSession(SessionImplementor session) {
+	private final boolean isConnectedToSession(SharedSessionContractImplementor session) {
 		final PersistentCollection persistentCollection = (PersistentCollection) getDelegate();
 		return session != null && session.isOpen()
 				&& session.getPersistenceContext().containsCollection(persistentCollection);

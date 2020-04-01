@@ -25,7 +25,7 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
 
 import org.eclipse.emf.teneo.hibernate.HbMapperException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -126,7 +126,7 @@ public class XSDDuration implements UserType {
 	 *           if the value cannot be retrieved from the ResultSet.
 	 */
 	public Object nullSafeGet(ResultSet resultSet, String[] names,
-			SessionImplementor sessionImplementor, Object owner) throws SQLException {
+			SharedSessionContractImplementor sessionImplementor, Object owner) throws SQLException {
 
 		final String data = resultSet.getString(names[0]);
 		if (data == null) {
@@ -148,7 +148,7 @@ public class XSDDuration implements UserType {
 	 *           if the converted value cannot be set in the statement.
 	 */
 	public void nullSafeSet(PreparedStatement statement, Object value, int index,
-			SessionImplementor sessionImplementor) throws SQLException {
+			SharedSessionContractImplementor sessionImplementor) throws SQLException {
 		String pvalue = null;
 		if (value != null) {
 			pvalue = ((Duration) value).toString();

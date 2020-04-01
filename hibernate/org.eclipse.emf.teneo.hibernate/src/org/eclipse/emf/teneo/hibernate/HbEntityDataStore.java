@@ -41,7 +41,6 @@ import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.metamodel.Metamodel;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -55,15 +54,20 @@ import org.eclipse.emf.teneo.hibernate.mapping.EMFInitializeCollectionEventListe
 import org.eclipse.emf.teneo.hibernate.mapping.eav.EAVGenericIDUserType;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.boot.internal.SettingsImpl;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
-import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.EntityType;
 
 /**
@@ -115,9 +119,14 @@ public class HbEntityDataStore extends HbDataStore implements EntityManagerFacto
 			// reset interceptor
 			setInterceptor(null);
 
+			setMetadataSources(
+					new MetadataSources(getConfiguration().getStandardServiceRegistryBuilder().build()));
+
 			mapModel();
 
 			setPropertiesInConfiguration();
+
+			initializeMetadata();
 
 			initializeDataStore();
 
@@ -132,10 +141,23 @@ public class HbEntityDataStore extends HbDataStore implements EntityManagerFacto
 
 			setInitialized(true);
 
-			setEventListeners();
+			// 15-11-2017 ajaroszewicz: commented due to UnknownServiceException error. in case we need
+			// auditing, we have to bring it back
+			// setEventListeners();
 		} finally {
 			PackageRegistryProvider.getInstance().setThreadPackageRegistry(null);
 		}
+	}
+
+	private void initializeMetadata() {
+		StandardServiceRegistry serviceRegistry = getConfiguration().getStandardServiceRegistryBuilder()
+				.build();
+		MetadataBuilder metadataBuilder = getMetadataSources().getMetadataBuilder(serviceRegistry);
+		metadataBuilder.applyImplicitNamingStrategy(ImplicitNamingStrategyJpaCompliantImpl.INSTANCE);
+		metadataBuilder.applyPhysicalNamingStrategy(PhysicalNamingStrategyStandardImpl.INSTANCE);
+
+		Metadata metadata = metadataBuilder.build();
+		setMetadata(metadata);
 	}
 
 	/** Build the mappings in the configuration */
@@ -153,8 +175,9 @@ public class HbEntityDataStore extends HbDataStore implements EntityManagerFacto
 		if (emf instanceof WrappedEntityManagerFactory) {
 			emf = ((WrappedEntityManagerFactory) emf).getDelegate();
 		}
-		final ServiceRegistry serviceRegistry = ((SessionFactoryImpl) ((EntityManagerFactoryImpl) emf)
-				.getSessionFactory()).getServiceRegistry();
+
+		final ServiceRegistry serviceRegistry = getConfiguration().getStandardServiceRegistryBuilder()
+				.build();
 		final EventListenerRegistry eventListenerRegistry = serviceRegistry
 				.getService(EventListenerRegistry.class);
 		eventListenerRegistry.appendListeners(EventType.INIT_COLLECTION, eventListener);
@@ -213,6 +236,7 @@ public class HbEntityDataStore extends HbDataStore implements EntityManagerFacto
 				properties.setProperty("hibernate.ejb.metamodel.generation", "disabled");
 			}
 			getConfiguration().addProperties(properties);
+			getConfiguration().getStandardServiceRegistryBuilder().applySettings(properties);
 		}
 	}
 
@@ -273,10 +297,8 @@ public class HbEntityDataStore extends HbDataStore implements EntityManagerFacto
 			}
 
 			// TODO replace this
-			final StringBufferInputStream is = new StringBufferInputStream(getMappingXML());
-
-
-			getConfiguration().addInputStream(is);
+			getConfiguration().addInputStream(new StringBufferInputStream(getMappingXML()));
+			getMetadataSources().addInputStream(new StringBufferInputStream(getMappingXML()));
 		}
 	}
 
@@ -284,26 +306,16 @@ public class HbEntityDataStore extends HbDataStore implements EntityManagerFacto
 		return new StringBufferInputStream(processEAVMapping(is));
 	}
 
-	private void applyTransactionProperties(SettingsImpl settings) {
-		PersistenceUnitTransactionType txnType = PersistenceUnitTransactionTypeHelper
-				.interpretTransactionType(getConfiguration()
-						.getProperty(AvailableSettings.TRANSACTION_TYPE));
-		if (txnType == null) {
-			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
-			txnType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
-		}
-		settings.setTransactionType(txnType);
-	}
-
 	/** Build the session factory */
 	protected EntityManagerFactory buildEntityManagerFactory() {
-		final SessionFactoryImpl sfi = (SessionFactoryImpl) getConfiguration().buildSessionFactory();
+		final Metadata metadata = getMetadata();
 
-		SettingsImpl settings = new SettingsImpl();
-		applyTransactionProperties(settings);
-		final EntityManagerFactory emf = new EntityManagerFactoryImpl("teneo", sfi, settings,
-				getConfiguration().getProperties(), getConfiguration());
-		return new WrappedEntityManagerFactory(emf);
+		final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
+		sessionFactoryBuilder.applyEntityTuplizerFactory(new EntityTuplizerFactory());
+
+		final SessionFactoryImpl sfi = (SessionFactoryImpl) sessionFactoryBuilder.build();
+
+		return new WrappedEntityManagerFactory(sfi);
 	}
 
 	/*
@@ -318,6 +330,13 @@ public class HbEntityDataStore extends HbDataStore implements EntityManagerFacto
 				getEntityManagerFactory().close();
 			}
 			entityManagerFactory = null;
+
+			StandardServiceRegistry serviceRegistry = (StandardServiceRegistry) metadataSources
+					.getServiceRegistry();
+			StandardServiceRegistryBuilder.destroy(serviceRegistry);
+			metadataSources = null;
+			metadata = null;
+
 			setInitialized(false);
 			// this will call the close method again but because the
 			// datastore
@@ -369,20 +388,13 @@ public class HbEntityDataStore extends HbDataStore implements EntityManagerFacto
 	/** Return the Classmappings as an iterator */
 	@Override
 	public Iterator<?> getClassMappings() {
-		return getConfiguration().getClassMappings();
+		return getMappings().getEntityBindings().iterator();
 	}
 
 	/** Is added for interface compliance with HbDataStore, should not be used */
 	@Override
 	public SessionFactory getSessionFactory() {
-		final EntityManagerFactoryImpl entityManagerFactoryImpl;
-		if (getEntityManagerFactory() instanceof WrappedEntityManagerFactory) {
-			entityManagerFactoryImpl = (EntityManagerFactoryImpl) ((WrappedEntityManagerFactory) getEntityManagerFactory())
-					.getDelegate();
-		} else {
-			entityManagerFactoryImpl = (EntityManagerFactoryImpl) getEntityManagerFactory();
-		}
-		return entityManagerFactoryImpl.getSessionFactory();
+		return getConfiguration().buildSessionFactory();
 	}
 
 	/**

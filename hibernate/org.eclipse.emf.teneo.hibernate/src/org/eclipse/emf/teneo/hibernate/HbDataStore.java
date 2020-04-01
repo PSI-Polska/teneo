@@ -87,9 +87,11 @@ import org.hibernate.FetchMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.Mappings;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -172,6 +174,9 @@ public abstract class HbDataStore implements DataStore, AuditDataStore {
 
 	/** The interceptor */
 	private Interceptor interceptor;
+
+	protected MetadataSources metadataSources;
+	protected Metadata metadata;
 
 	/**
 	 * The used mapping if not passed through a hbm file, can be retrieved for debugging purposes
@@ -810,7 +815,6 @@ public abstract class HbDataStore implements DataStore, AuditDataStore {
 						metaAttribute.addValue("true");
 						metas.put(HbConstants.SYNTHETIC_PROPERTY_INDICATOR, metaAttribute);
 						inverseRefProperty.setMetaAttributes(metas);
-						inverseRefProperty.setNodeName(inverseRefProperty.getName());
 						inverseRefProperty.setPropertyAccessorName(SyntheticPropertyHandler.class.getName());
 						inverseRefProperty.setLazy(false);
 
@@ -872,7 +876,6 @@ public abstract class HbDataStore implements DataStore, AuditDataStore {
 						metas.put(HbConstants.SYNTHETIC_INDEX_PROPERTY_INDICATOR, metaAttribute);
 
 						indexProperty.setMetaAttributes(metas);
-						indexProperty.setNodeName(indexProperty.getName());
 						indexProperty.setPropertyAccessorName(SyntheticIndexPropertyHandler.class
 										.getName());
 						// always make this nullable, nullability is controlled
@@ -1074,6 +1077,8 @@ public abstract class HbDataStore implements DataStore, AuditDataStore {
 		hmg.setPersistenceOptions(po);
 		final String hbm = hmg.generateToString(getPaModel());
 
+		// System.err.println(hbm);
+
 		if (log.isDebugEnabled()) {
 			log.debug("Computing id types of mapped EClasses");
 		}
@@ -1243,7 +1248,6 @@ public abstract class HbDataStore implements DataStore, AuditDataStore {
 		final Property eContainer = new Property();
 		eContainer.setName(HbConstants.PROPERTY_ECONTAINER);
 		eContainer.setMetaAttributes(new HashMap<Object, Object>());
-		eContainer.setNodeName(eContainer.getName());
 		eContainer.setPropertyAccessorName(EContainerAccessor.class.getName());
 
 		final SimpleValue sv = new SimpleValue(getMappings(), pc.getTable());
@@ -1265,7 +1269,6 @@ public abstract class HbDataStore implements DataStore, AuditDataStore {
 			final Property ecFID = new Property();
 			ecFID.setName(HbConstants.PROPERTY_ECONTAINER_FEATURE_ID);
 			ecFID.setMetaAttributes(new HashMap<Object, Object>());
-			ecFID.setNodeName(ecFID.getName());
 			ecFID.setPropertyAccessorName(EContainerFeatureIDAccessor.class.getName());
 			final SimpleValue svfid = new SimpleValue(getMappings(), pc.getTable());
 			svfid.setTypeName("integer");
@@ -1282,7 +1285,6 @@ public abstract class HbDataStore implements DataStore, AuditDataStore {
 			final Property ecFID = new Property();
 			ecFID.setName(HbConstants.PROPERTY_ECONTAINER_FEATURE_NAME);
 			ecFID.setMetaAttributes(new HashMap<Object, Object>());
-			ecFID.setNodeName(ecFID.getName());
 			ecFID.setPropertyAccessorName(NewEContainerFeatureIDPropertyHandler.class.getName());
 			final SimpleValue svfid = new SimpleValue(getMappings(), pc.getTable());
 			svfid.setTypeName(EContainerFeatureIDUserType.class.getName());
@@ -1864,8 +1866,8 @@ public abstract class HbDataStore implements DataStore, AuditDataStore {
 		}
 	}
 
-	protected Mappings getMappings() {
-		return getHibernateConfiguration().createMappings();
+	protected MetadataImplementor getMappings() {
+		return (MetadataImplementor) metadata;
 	}
 
 	/**
@@ -1910,5 +1912,21 @@ public abstract class HbDataStore implements DataStore, AuditDataStore {
 
 	public void setAuditHandler(AuditHandler auditHandler) {
 		this.auditHandler = auditHandler;
+	}
+
+	public Metadata getMetadata() {
+		return metadata;
+	}
+
+	public void setMetadata(Metadata metadata) {
+		this.metadata = metadata;
+	}
+
+	public MetadataSources getMetadataSources() {
+		return metadataSources;
+	}
+
+	public void setMetadataSources(MetadataSources metadataSources) {
+		this.metadataSources = metadataSources;
 	}
 }

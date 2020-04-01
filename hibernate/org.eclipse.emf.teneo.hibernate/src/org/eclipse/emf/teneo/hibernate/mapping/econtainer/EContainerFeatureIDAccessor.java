@@ -19,10 +19,10 @@ package org.eclipse.emf.teneo.hibernate.mapping.econtainer;
 import org.eclipse.emf.teneo.extension.ExtensionManager;
 import org.eclipse.emf.teneo.extension.ExtensionManagerAware;
 import org.eclipse.emf.teneo.extension.ExtensionPoint;
-import org.hibernate.PropertyNotFoundException;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.Setter;
 
 /**
  * Creates the getter and setter for eContainerFeatureID members.
@@ -30,36 +30,11 @@ import org.hibernate.property.Setter;
  * @author <a href="mailto:mtaal@elver.org">Martin Taal</a>
  * @version $Revision: 1.6 $
  */
-public class EContainerFeatureIDAccessor implements PropertyAccessor, ExtensionPoint,
+public class EContainerFeatureIDAccessor
+		implements PropertyAccess, PropertyAccessStrategy, ExtensionPoint,
 		ExtensionManagerAware {
 
 	private ExtensionManager extensionManager;
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.hibernate.property.PropertyAccessor#getGetter(java.lang.Class, java.lang.String)
-	 */
-	@SuppressWarnings("rawtypes")
-	public Getter getGetter(Class theClass, String propertyName) throws PropertyNotFoundException {
-		final EContainerFeatureIDPropertyHandler handler = extensionManager
-				.getExtension(EContainerFeatureIDPropertyHandler.class);
-		handler.initialize(propertyName);
-		return handler;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.hibernate.property.PropertyAccessor#getSetter(java.lang.Class, java.lang.String)
-	 */
-	@SuppressWarnings("rawtypes")
-	public Setter getSetter(Class theClass, String propertyName) throws PropertyNotFoundException {
-		final EContainerFeatureIDPropertyHandler handler = extensionManager
-				.getExtension(EContainerFeatureIDPropertyHandler.class);
-		handler.initialize(propertyName);
-		return handler;
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -69,5 +44,27 @@ public class EContainerFeatureIDAccessor implements PropertyAccessor, ExtensionP
 	 */
 	public void setExtensionManager(ExtensionManager extensionManager) {
 		this.extensionManager = extensionManager;
+	}
+
+	public Getter getGetter() {
+		final EContainerFeatureIDPropertyHandler handler = extensionManager
+				.getExtension(EContainerFeatureIDPropertyHandler.class);
+		handler.initialize();
+		return handler;
+	}
+
+	public Setter getSetter() {
+		final EContainerFeatureIDPropertyHandler handler = extensionManager
+				.getExtension(EContainerFeatureIDPropertyHandler.class);
+		handler.initialize();
+		return handler;
+	}
+
+	public PropertyAccessStrategy getPropertyAccessStrategy() {
+		return this;
+	}
+
+	public PropertyAccess buildPropertyAccess(Class arg0, String arg1) {
+		return this;
 	}
 }

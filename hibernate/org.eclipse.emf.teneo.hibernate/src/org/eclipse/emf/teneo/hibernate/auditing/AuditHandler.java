@@ -51,7 +51,7 @@ import org.eclipse.emf.teneo.hibernate.auditing.model.teneoauditing.TeneoAuditEn
 import org.eclipse.emf.teneo.hibernate.auditing.model.teneoauditing.TeneoauditingPackage;
 import org.eclipse.emf.teneo.util.StoreUtil;
 import org.hibernate.Session;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Creates the audit model(s) on the basis of a set of EPackages. Provides other utility methods for
@@ -289,9 +289,11 @@ public class AuditHandler implements ExtensionPoint {
 	 * Create a string which reflects the id of the entity.
 	 */
 	public String entityToIdString(Session session, Object entity) {
-		final String entityName = ((SessionImplementor) session).bestGuessEntityName(entity);
-		final Serializable id = ((SessionImplementor) session).getEntityPersister(entityName, entity)
-				.getIdentifier(entity, (SessionImplementor) session);
+		final String entityName = ((SharedSessionContractImplementor) session)
+				.bestGuessEntityName(entity);
+		final Serializable id = ((SharedSessionContractImplementor) session)
+				.getEntityPersister(entityName, entity)
+				.getIdentifier(entity, (SharedSessionContractImplementor) session);
 		return entityName + ID_SEPARATOR + id.getClass().getName() + ID_SEPARATOR + id;
 	}
 

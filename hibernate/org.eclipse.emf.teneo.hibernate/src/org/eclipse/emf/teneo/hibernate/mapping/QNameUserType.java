@@ -27,6 +27,7 @@ import javax.xml.namespace.QName;
 import org.eclipse.emf.teneo.hibernate.HbStoreException;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -109,7 +110,8 @@ public class QNameUserType implements UserType {
 	 * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, java.lang.String[],
 	 * java.lang.Object)
 	 */
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor sessionImplementor,
+	public Object nullSafeGet(ResultSet rs, String[] names,
+			SharedSessionContractImplementor sessionImplementor,
 			Object owner) throws HibernateException, SQLException {
 		final String str = rs.getString(names[0]);
 		if (rs.wasNull()) {
@@ -125,7 +127,7 @@ public class QNameUserType implements UserType {
 	 * int)
 	 */
 	public void nullSafeSet(PreparedStatement st, Object value, int index,
-			SessionImplementor sessionImplementor) throws HibernateException, SQLException {
+			SharedSessionContractImplementor sessionImplementor) throws HibernateException, SQLException {
 		if (value == null) {
 			st.setNull(index, Types.VARCHAR);
 		} else {

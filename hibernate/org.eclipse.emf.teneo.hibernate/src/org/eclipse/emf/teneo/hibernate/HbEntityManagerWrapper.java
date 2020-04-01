@@ -24,12 +24,13 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
+import javax.persistence.LockModeType;
 import javax.persistence.Query;
 
 import org.eclipse.emf.teneo.annotations.pannotation.InheritanceType;
 import org.hibernate.Session;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SingleTableSubclass;
@@ -191,10 +192,12 @@ public class HbEntityManagerWrapper implements SessionWrapper {
 	public void saveOrUpdate(Object obj) {
 		final Session session = (Session) getEntityManager().getDelegate();
 		final String entityName = hbEntityDataStore.getInterceptor().getEntityName(obj);
-		if (((SessionImplementor) session).getPersistenceContext().isEntryFor(obj)) {
+		if (((SharedSessionContractImplementor) session).getPersistenceContext().isEntryFor(obj)) {
 			getEntityManager().persist(obj);
-		} else if (ForeignKeys.isNotTransient(entityName, obj, false, (SessionImplementor) session)
-				|| !ForeignKeys.isTransient(entityName, obj, false, (SessionImplementor) session)) {
+		} else if (ForeignKeys.isNotTransient(entityName, obj, false,
+				(SharedSessionContractImplementor) session)
+				|| !ForeignKeys.isTransient(entityName, obj, false,
+						(SharedSessionContractImplementor) session)) {
 			// this is a trick because ejb3 does not support saveOrUpdate (why
 			// did they not add
 			// this behavior!)
@@ -221,15 +224,16 @@ public class HbEntityManagerWrapper implements SessionWrapper {
 
 	/** Refresh the object */
 	public void refresh(Object obj) {
-		getEntityManager().refresh(obj);
+		// pass this special lock type to prevent hibernate from using a
+		// cascade entity loader, gives
+		getEntityManager().refresh(obj, LockModeType.PESSIMISTIC_READ);
 	}
 
 	/** Check if a certain class is mapped using a certain inheritance strategy */
 	public boolean isInheritanceStrategy(Class<?> cls, InheritanceType strategy) {
 		final String name = cls.getName();
 		final String realName = name.substring(name.lastIndexOf('.') + 1, name.length() - 4);
-		@SuppressWarnings("deprecation")
-		final PersistentClass cmd = hbEntityDataStore.getConfiguration().getClassMapping(realName);
+		final PersistentClass cmd = hbEntityDataStore.getMappings().getEntityBinding(realName);
 		if (strategy.equals(InheritanceType.SINGLE_TABLE)) {
 			return cmd instanceof SingleTableSubclass;
 		}

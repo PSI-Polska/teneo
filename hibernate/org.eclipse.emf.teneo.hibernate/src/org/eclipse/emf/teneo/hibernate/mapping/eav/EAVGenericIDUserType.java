@@ -19,7 +19,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.HashMap;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.usertype.UserType;
 
@@ -65,7 +65,8 @@ public class EAVGenericIDUserType implements UserType {
 		return x.equals(y);
 	}
 
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor sessionImplementor,
+	public Object nullSafeGet(ResultSet rs, String[] names,
+			SharedSessionContractImplementor sessionImplementor,
 			Object owner) throws SQLException {
 		final String value = (String) StandardBasicTypes.STRING.nullSafeGet(rs, names[0],
 				sessionImplementor);
@@ -83,7 +84,7 @@ public class EAVGenericIDUserType implements UserType {
 	}
 
 	public void nullSafeSet(PreparedStatement statement, Object value, int index,
-			SessionImplementor sessionImplementor) throws SQLException {
+			SharedSessionContractImplementor sessionImplementor) throws SQLException {
 		if (value == null) {
 			statement.setNull(index, Types.VARCHAR);
 		} else {

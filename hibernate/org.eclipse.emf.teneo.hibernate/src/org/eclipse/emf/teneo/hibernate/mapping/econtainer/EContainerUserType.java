@@ -38,11 +38,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.metamodel.relational.Size;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.AbstractType;
@@ -119,13 +119,15 @@ public class EContainerUserType extends AbstractType implements CompositeUserTyp
 	}
 
 	/** Does nothing */
-	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session)
+	public boolean isDirty(Object old, Object current, boolean[] checkable,
+			SharedSessionContractImplementor session)
 			throws HibernateException {
 		return isDirty(old, current, session);
 	}
 
 	/** Not supported */
-	public Object nullSafeGet(ResultSet rs, String name, SessionImplementor session, Object owner)
+	public Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session,
+			Object owner)
 			throws HibernateException, SQLException {
 		throw new UnsupportedOperationException("not supported for econtainer");
 	}
@@ -137,7 +139,7 @@ public class EContainerUserType extends AbstractType implements CompositeUserTyp
 	 * boolean[], org.hibernate.engine.SessionImplementor)
 	 */
 	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable,
-			SessionImplementor session) throws HibernateException, SQLException {
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		// TODO Auto-generated method stub
 		if (settable == null || settable[0]) {
 			nullSafeSet(st, value, index, session);
@@ -151,7 +153,8 @@ public class EContainerUserType extends AbstractType implements CompositeUserTyp
 	 * org.hibernate.engine.SessionImplementor, java.lang.Object, java.util.Map)
 	 */
 	@SuppressWarnings("rawtypes")
-	public Object replace(Object original, Object target, SessionImplementor session, Object owner,
+	public Object replace(Object original, Object target, SharedSessionContractImplementor session,
+			Object owner,
 			Map copyCache) throws HibernateException {
 		return replace(original, target, session, owner);
 	}
@@ -220,7 +223,7 @@ public class EContainerUserType extends AbstractType implements CompositeUserTyp
 
 	/** From parent */
 	public ForeignKeyDirection getForeignKeyDirection() {
-		return ForeignKeyDirection.FOREIGN_KEY_TO_PARENT;
+		return ForeignKeyDirection.TO_PARENT;
 	}
 
 	/** Returns null */
@@ -284,7 +287,8 @@ public class EContainerUserType extends AbstractType implements CompositeUserTyp
 	 * Translates the serialized cached object to a real object
 	 */
 	@Override
-	public Object assemble(Serializable cached, SessionImplementor session, Object owner)
+	public Object assemble(Serializable cached, SharedSessionContractImplementor session,
+			Object owner)
 			throws HibernateException {
 
 		// palash: fix for ALL our teneo/ehcache woes!!
@@ -306,7 +310,7 @@ public class EContainerUserType extends AbstractType implements CompositeUserTyp
 	}
 
 	/** Create a containerpointer */
-	public Serializable disassemble(Object value, SessionImplementor session)
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if (value == null) {
 			return null;
@@ -322,7 +326,8 @@ public class EContainerUserType extends AbstractType implements CompositeUserTyp
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session,
+			Object owner)
 			throws HibernateException {
 		return disassemble(value, session);
 	}
@@ -356,7 +361,8 @@ public class EContainerUserType extends AbstractType implements CompositeUserTyp
 	}
 
 	/** Load the object on the basis of the data in the resultset */
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
+	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session,
+			Object owner)
 			throws HibernateException, SQLException {
 		final String cc = rs.getString(names[0]); // container class
 		if (cc == null) {
@@ -373,7 +379,8 @@ public class EContainerUserType extends AbstractType implements CompositeUserTyp
 	}
 
 	/** Set the data in the resultset */
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
+	public void nullSafeSet(PreparedStatement st, Object value, int index,
+			SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if (value == null) {
 			st.setNull(index, Types.VARCHAR);
@@ -390,7 +397,7 @@ public class EContainerUserType extends AbstractType implements CompositeUserTyp
 	/**
 	 * Returns the identifiertype on the basis of the class of the passed object
 	 */
-	private Type getIdentifierType(String entityName, SessionImplementor session) {
+	private Type getIdentifierType(String entityName, SharedSessionContractImplementor session) {
 		Type type = identifierTypeCache.get(entityName);
 		if (type != null) {
 			return type;
@@ -408,7 +415,8 @@ public class EContainerUserType extends AbstractType implements CompositeUserTyp
 	 * @see org.hibernate.usertype.CompositeUserType#replace(java.lang.Object, java.lang.Object,
 	 * org.hibernate.engine.SessionImplementor, java.lang.Object)
 	 */
-	public Object replace(Object original, Object target, SessionImplementor session, Object owner)
+	public Object replace(Object original, Object target, SharedSessionContractImplementor session,
+			Object owner)
 			throws HibernateException {
 		if (original == null) {
 			return null;
@@ -419,7 +427,8 @@ public class EContainerUserType extends AbstractType implements CompositeUserTyp
 	}
 
 	/** Returns the id of the passed object */
-	private Serializable getID(String entityName, Object value, SessionImplementor session) {
+	private Serializable getID(String entityName, Object value,
+			SharedSessionContractImplementor session) {
 		Serializable result = ForeignKeys.getEntityIdentifierIfNotUnsaved(entityName, value, session);
 
 		if (result != null) {
@@ -512,7 +521,7 @@ public class EContainerUserType extends AbstractType implements CompositeUserTyp
 		}
 
 		/** Returns the container object pointed to */
-		private Object getObject(SessionImplementor session) {
+		private Object getObject(SharedSessionContractImplementor session) {
 			return session.internalLoad(container, id, false, false);
 		}
 	}

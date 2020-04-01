@@ -20,7 +20,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 
@@ -62,7 +62,7 @@ public class SyntheticIndexPropertyHandler extends SyntheticPropertyHandler {
 	 * org.hibernate.engine.SessionImplementor)
 	 */
 	@SuppressWarnings("rawtypes")
-	public Object getForInsert(Object arg0, Map arg1, SessionImplementor arg2)
+	public Object getForInsert(Object arg0, Map arg1, SharedSessionContractImplementor arg2)
 			throws HibernateException {
 		if (optional) {
 			return null;

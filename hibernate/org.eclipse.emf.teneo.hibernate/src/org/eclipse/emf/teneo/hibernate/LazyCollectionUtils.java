@@ -28,7 +28,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -67,7 +67,7 @@ public class LazyCollectionUtils {
 		final AbstractPersistentCollection persistentCollection = (AbstractPersistentCollection) persistableList
 				.getDelegate();
 
-		final SessionImplementor session = persistentCollection.getSession();
+		final SharedSessionContractImplementor session = persistentCollection.getSession();
 		final PagingIterator<E> pagingIterator = new PagingIterator<E>();
 		pagingIterator.setCollection(persistentCollection);
 		pagingIterator.setPageSize(pageSize);
@@ -103,7 +103,7 @@ public class LazyCollectionUtils {
 		final PersistableDelegateList<?> persistableList = (PersistableDelegateList<?>) coll;
 		final AbstractPersistentCollection persistentCollection = (AbstractPersistentCollection) persistableList
 				.getDelegate();
-		final SessionImplementor session = persistentCollection.getSession();
+		final SharedSessionContractImplementor session = persistentCollection.getSession();
 		final QueryableCollection persister = new SessionFactoryHelper(session.getFactory())
 				.getCollectionPersister(persistentCollection.getRole());
 		return persister.getSize(persistentCollection.getKey(), session);
@@ -130,7 +130,7 @@ public class LazyCollectionUtils {
 		}
 		final AbstractPersistentCollection persistentCollection = (AbstractPersistentCollection) persistableList
 				.getDelegate();
-		final SessionImplementor session = persistentCollection.getSession();
+		final SharedSessionContractImplementor session = persistentCollection.getSession();
 		// if not a valid session then go away
 		if (session == null || !session.isOpen()
 				|| !session.getPersistenceContext().containsCollection(persistentCollection)) {

@@ -24,7 +24,7 @@ import java.util.HashMap;
 
 import org.eclipse.emf.common.util.Enumerator;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Implements the EMF UserType for an Enum in a dynamic model, for an integer field.
@@ -47,7 +47,8 @@ public class DynamicENumUserIntegerType extends DynamicENumUserType {
 	 * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, java.lang.String[],
 	 * java.lang.Object)
 	 */
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor sessionImplementor,
+	public Object nullSafeGet(ResultSet rs, String[] names,
+			SharedSessionContractImplementor sessionImplementor,
 			Object owner) throws HibernateException, SQLException {
 		final int value = rs.getInt(names[0]);
 		if (rs.wasNull()) {
@@ -73,7 +74,7 @@ public class DynamicENumUserIntegerType extends DynamicENumUserType {
 	 */
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index,
-			SessionImplementor sessionImplementor) throws HibernateException, SQLException {
+			SharedSessionContractImplementor sessionImplementor) throws HibernateException, SQLException {
 		if (value == null) {
 			st.setNull(index, Types.INTEGER);
 		} else {

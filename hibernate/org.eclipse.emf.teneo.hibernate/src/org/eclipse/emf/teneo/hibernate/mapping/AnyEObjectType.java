@@ -35,12 +35,12 @@ import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.metamodel.relational.Size;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.type.AbstractType;
 import org.hibernate.type.AssociationType;
@@ -119,13 +119,15 @@ public class AnyEObjectType extends AbstractType implements CompositeType, Assoc
 	}
 
 	/** Returns unsupportedexception */
-	public Object nullSafeGet(ResultSet rs, String name, SessionImplementor session, Object owner)
+	public Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session,
+			Object owner)
 			throws HibernateException, SQLException {
 		throw new UnsupportedOperationException("Type is a multicolumn type");
 	}
 
 	/** Returns the object from the resultset */
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
+	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session,
+			Object owner)
 			throws HibernateException, SQLException {
 		final String entityName = rs.getString(names[0]);
 		if (rs.wasNull()) {
@@ -158,7 +160,8 @@ public class AnyEObjectType extends AbstractType implements CompositeType, Assoc
 		}
 	}
 
-	public Object hydrate(ResultSet rs, String[] names, SessionImplementor session, Object owner)
+	public Object hydrate(ResultSet rs, String[] names, SharedSessionContractImplementor session,
+			Object owner)
 			throws HibernateException, SQLException {
 		final String entityName = rs.getString(names[0]);
 		if (rs.wasNull()) {
@@ -176,25 +179,26 @@ public class AnyEObjectType extends AbstractType implements CompositeType, Assoc
 		return new EObjectCacheEntry(entityName, getId(idStr, idType));
 	}
 
-	public Object resolve(Object value, SessionImplementor session, Object owner)
+	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 		EObjectCacheEntry entry = (EObjectCacheEntry) value;
 		return session.internalLoad(entry.entityName, entry.id, true, false);
 	}
 
 	/*
-	 * public Object semiResolve(Object value, SessionImplementor session, Object owner) throws
-	 * HibernateException { throw new UnsupportedOperationException("Any mappings may not form part of
-	 * a property-ref"); }
+	 * public Object semiResolve(Object value, SharedSessionContractImplementor session, Object owner)
+	 * throws HibernateException { throw new UnsupportedOperationException("Any mappings may not form
+	 * part of a property-ref"); }
 	 */
 
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
+	public void nullSafeSet(PreparedStatement st, Object value, int index,
+			SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		nullSafeSet(st, value, index, null, session);
 	}
 
 	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable,
-			SessionImplementor session) throws HibernateException, SQLException {
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
 
 		String entityName = null;
 		String idStr = null;
@@ -254,13 +258,15 @@ public class AnyEObjectType extends AbstractType implements CompositeType, Assoc
 		}
 	}
 
-	public Object assemble(Serializable cached, SessionImplementor session, Object owner)
+	public Object assemble(Serializable cached, SharedSessionContractImplementor session,
+			Object owner)
 			throws HibernateException {
 		final EObjectCacheEntry entry = (EObjectCacheEntry) cached;
 		return entry == null ? null : session.internalLoad(entry.entityName, entry.id, true, false);
 	}
 
-	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session,
+			Object owner)
 			throws HibernateException {
 		if (value == null) {
 			return null;
@@ -275,7 +281,8 @@ public class AnyEObjectType extends AbstractType implements CompositeType, Assoc
 	}
 
 	@SuppressWarnings("rawtypes")
-	public Object replace(Object original, Object target, SessionImplementor session, Object owner,
+	public Object replace(Object original, Object target, SharedSessionContractImplementor session,
+			Object owner,
 			Map copyCache) throws HibernateException {
 		if (original == null) {
 			return null;
@@ -299,7 +306,7 @@ public class AnyEObjectType extends AbstractType implements CompositeType, Assoc
 		return PROPERTY_NAMES;
 	}
 
-	public Object getPropertyValue(Object component, int i, SessionImplementor session)
+	public Object getPropertyValue(Object component, int i, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if (component != null) {
 			final String entityName = session.bestGuessEntityName(component);
@@ -318,7 +325,7 @@ public class AnyEObjectType extends AbstractType implements CompositeType, Assoc
 		return null;
 	}
 
-	public Object[] getPropertyValues(Object component, SessionImplementor session)
+	public Object[] getPropertyValues(Object component, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if (component != null) {
 			final String entityName = session.bestGuessEntityName(component);
@@ -348,7 +355,7 @@ public class AnyEObjectType extends AbstractType implements CompositeType, Assoc
 	}
 
 	public ForeignKeyDirection getForeignKeyDirection() {
-		return ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT;
+		return ForeignKeyDirection.FROM_PARENT;
 	}
 
 	public boolean isAssociationType() {
@@ -364,7 +371,7 @@ public class AnyEObjectType extends AbstractType implements CompositeType, Assoc
 	}
 
 	public boolean isModified(Object old, Object current, boolean[] checkable,
-			SessionImplementor session) throws HibernateException {
+			SharedSessionContractImplementor session) throws HibernateException {
 		if (current == null) {
 			return old != null;
 		}
@@ -427,7 +434,8 @@ public class AnyEObjectType extends AbstractType implements CompositeType, Assoc
 		return result;
 	}
 
-	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session)
+	public boolean isDirty(Object old, Object current, boolean[] checkable,
+			SharedSessionContractImplementor session)
 			throws HibernateException {
 		return isDirty(old, current, session);
 	}
@@ -453,5 +461,15 @@ public class AnyEObjectType extends AbstractType implements CompositeType, Assoc
 	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters,
 			Set<String> treatAsDeclarations) {
 		return "";
+	}
+
+	public int getPropertyIndex(String arg0) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public boolean hasNotNullProperty() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

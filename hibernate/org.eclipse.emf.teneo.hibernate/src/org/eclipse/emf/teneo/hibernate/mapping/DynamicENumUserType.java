@@ -31,7 +31,7 @@ import org.eclipse.emf.teneo.PackageRegistryProvider;
 import org.eclipse.emf.teneo.hibernate.HbMapperException;
 import org.eclipse.emf.teneo.hibernate.mapper.HbMapperConstants;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
@@ -122,7 +122,8 @@ public class DynamicENumUserType implements UserType, ParameterizedType {
 	 * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, java.lang.String[],
 	 * java.lang.Object)
 	 */
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor sessionImplementor,
+	public Object nullSafeGet(ResultSet rs, String[] names,
+			SharedSessionContractImplementor sessionImplementor,
 			Object owner) throws HibernateException, SQLException {
 		final String name = rs.getString(names[0]);
 		if (rs.wasNull()) {
@@ -150,7 +151,7 @@ public class DynamicENumUserType implements UserType, ParameterizedType {
 	 * int)
 	 */
 	public void nullSafeSet(PreparedStatement st, Object value, int index,
-			SessionImplementor sessionImplementor) throws HibernateException, SQLException {
+			SharedSessionContractImplementor sessionImplementor) throws HibernateException, SQLException {
 		if (value == null) {
 			st.setNull(index, Types.VARCHAR);
 		} else {

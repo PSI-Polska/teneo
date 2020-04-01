@@ -49,6 +49,7 @@ import org.hibernate.Transaction;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.event.spi.FlushEventListener;
@@ -245,7 +246,7 @@ public class AuditProcessHandler implements AfterTransactionCompletionProcess,
 
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
 		// see: http://www.jboss.com/index.html?module=bb&op=viewtopic&p=4178431
-		if (session.getFlushMode() != FlushMode.MANUAL) {
+		if (session.getHibernateFlushMode() != FlushMode.MANUAL) {
 			session.flush();
 			final List<AuditWork> auditWorks = getRemoveQueue((Session) session, false);
 			if (auditWorks == null || auditWorks.isEmpty()) {
@@ -279,7 +280,8 @@ public class AuditProcessHandler implements AfterTransactionCompletionProcess,
 		doAuditWorkInSession((Session) event.getSession(), auditWorks);
 	}
 
-	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+	public void doAfterTransactionCompletion(boolean success,
+			SharedSessionContractImplementor session) {
 		if (!success) {
 			return;
 		}
@@ -693,4 +695,5 @@ public class AuditProcessHandler implements AfterTransactionCompletionProcess,
 	public boolean requiresPostCommitHanding(EntityPersister arg0) {
 		return true;
 	}
+
 }

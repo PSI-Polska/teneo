@@ -44,7 +44,7 @@ public class EAVValueInstantiator extends PojoInstantiator {
 
 	public EAVValueInstantiator(PersistentClass persistentClass,
 			ReflectionOptimizer.InstantiationOptimizer optimizer) {
-		super(persistentClass, optimizer);
+		super(persistentClass.getMappedClass(), optimizer, false);
 		hbDataStore = HbHelper.INSTANCE.getDataStore(persistentClass);
 	}
 

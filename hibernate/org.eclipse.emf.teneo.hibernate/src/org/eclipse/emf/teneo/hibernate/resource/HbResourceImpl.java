@@ -48,7 +48,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.IdentityMap;
 
 /**
@@ -192,10 +192,11 @@ public class HbResourceImpl extends StoreResource implements HbResource {
 		// solves a bug with older versions of Hibernate, see the EMFInterceptor
 		@SuppressWarnings("unchecked")
 		Map.Entry<?, ?>[] collectionEntryArray = IdentityMap
-				.concurrentEntries(((SessionImplementor) theSession).getPersistenceContext()
+				.concurrentEntries(((SharedSessionContractImplementor) theSession).getPersistenceContext()
 						.getCollectionEntries());
 		for (Entry<?, ?> element : collectionEntryArray) {
-			((PersistentCollection) element.getKey()).unsetSession((SessionImplementor) theSession);
+			((PersistentCollection) element.getKey())
+					.unsetSession((SharedSessionContractImplementor) theSession);
 		}
 
 		theSession.close();
@@ -260,7 +261,7 @@ public class HbResourceImpl extends StoreResource implements HbResource {
 
 			// delete all deleted objects
 			for (Object obj : removedEObjects) {
-				if (IdentifierUtil.getID(obj, (SessionImplementor) mySession) != null) // persisted
+				if (IdentifierUtil.getID(obj, (SharedSessionContractImplementor) mySession) != null) // persisted
 				// object
 				{
 					mySession.delete(obj);

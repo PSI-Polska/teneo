@@ -33,9 +33,9 @@ import org.eclipse.emf.teneo.util.AssertUtil;
 import org.eclipse.emf.teneo.util.FieldUtil;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.property.Getter;
-import org.hibernate.property.Setter;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.Setter;
 
 /**
  * Implements the accessor for eContainer member
@@ -57,7 +57,7 @@ public class EContainerPropertyHandler implements Getter, Setter, ExtensionPoint
 	private Field ecField;
 
 	/** Constructor */
-	public void initialize(String field) {
+	public void initialize() {
 		if (log.isDebugEnabled()) {
 			log.debug("Created eContainer property handler");
 		}
@@ -89,7 +89,7 @@ public class EContainerPropertyHandler implements Getter, Setter, ExtensionPoint
 	 * org.hibernate.engine.SessionImplementor)
 	 */
 	@SuppressWarnings("rawtypes")
-	public Object getForInsert(Object owner, Map mergeMap, SessionImplementor session)
+	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return ((EObject) owner).eContainer();
 	}

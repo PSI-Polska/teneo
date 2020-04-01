@@ -20,7 +20,7 @@ package org.eclipse.emf.teneo.hibernate.mapping.eav;
 import java.util.Iterator;
 
 import org.hibernate.HibernateException;
-import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.internal.PersistentList;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
@@ -84,7 +84,8 @@ public class EAVTuplizer extends PojoEntityTuplizer {
 	}
 
 	@Override
-	protected Instantiator buildInstantiator(PersistentClass persistentClass) {
+	protected Instantiator buildInstantiator(EntityMetamodel entityMetamodel,
+			PersistentClass persistentClass) {
 		return new EAVValueInstantiator(persistentClass, null);
 	}
 }

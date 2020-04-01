@@ -47,15 +47,14 @@ import org.eclipse.emf.teneo.hibernate.mapping.property.SyntheticPropertyHandler
 import org.eclipse.emf.teneo.util.StoreUtil;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.property.EmbeddedPropertyAccessor;
-import org.hibernate.property.PropertyAccessor;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.IdentifierType;
 import org.hibernate.type.PrimitiveType;
@@ -133,11 +132,11 @@ public class HbUtil {
 	 * @return the object read from the database with Merge support.
 	 */
 	public static EObject merge(Session session, EObject eObject, int maxMergeLevel) {
-		SessionImplementor sessionImplementor = (SessionImplementor) session;
+		SharedSessionContractImplementor sessionImplementor = (SharedSessionContractImplementor) session;
 		return merge(sessionImplementor, eObject, new HashMap<EObject, EObject>(), maxMergeLevel, 0);
 	}
 
-	private static EObject merge(SessionImplementor sessionImplementor, EObject eObject,
+	private static EObject merge(SharedSessionContractImplementor sessionImplementor, EObject eObject,
 			Map<EObject, EObject> copyCache, int maxMergeLevel, int currentMergeLevel) {
 		if (copyCache.containsKey(eObject)) {
 			return copyCache.get(eObject);
@@ -200,7 +199,7 @@ public class HbUtil {
 		if (eobj instanceof HibernateProxy) {
 			id = ((HibernateProxy) eobj).getHibernateLazyInitializer().getIdentifier();
 		} else {
-			id = IdentifierUtil.getID(eobj, hd, (SessionImplementor) session);
+			id = IdentifierUtil.getID(eobj, hd, (SharedSessionContractImplementor) session);
 		}
 		if (id == null) {
 			id = IdentifierCacheHandler.getInstance().getID(eobj);
@@ -237,7 +236,7 @@ public class HbUtil {
 	}
 
 	/** Returns the correct accessor on the basis of the type of property */
-	public static PropertyAccessor getPropertyAccessor(Property mappedProperty, HbDataStore ds,
+	public static PropertyAccess getPropertyAccessor(Property mappedProperty, HbDataStore ds,
 			String entityName, EClass mappedEClass) {
 		if (mappedProperty.getMetaAttribute(HbConstants.SYNTHETIC_PROPERTY_INDICATOR) != null) { // synthetic
 			return new SyntheticPropertyHandler(mappedProperty.getName());
@@ -248,9 +247,9 @@ public class HbUtil {
 			return new IdentifierPropertyHandler();
 		} else if (mappedProperty.getMetaAttribute(HbMapperConstants.VERSION_META) != null) {
 			return ds.getHbContext().createVersionAccessor();
-		} else if (mappedProperty.getName().compareToIgnoreCase("_identifierMapper") == 0) {
-			// name is used by hb
-			return new EmbeddedPropertyAccessor(); // new
+			// } else if (mappedProperty.getName().compareToIgnoreCase("_identifierMapper") == 0) {
+			// // name is used by hb
+			// return new EmbeddedPropertyAccessor(); // new
 			// DummyPropertyHandler();
 		} else if (mappedProperty.getName().compareToIgnoreCase(HbConstants.PROPERTY_ECONTAINER) == 0) {
 			return ds.getHbContext().createEContainerAccessor();
@@ -297,7 +296,7 @@ public class HbUtil {
 				return ds.getHbContext().createEListAccessor(efeature, extraLazy,
 						ds.getPersistenceOptions().isMapEMapAsTrueMap(), ds.getPersistenceOptions());
 			} else {
-				PropertyAccessor erefPropertyHandler = ds.getHbContext().createEReferenceAccessor(eref);
+				PropertyAccess erefPropertyHandler = ds.getHbContext().createEReferenceAccessor(eref);
 				if (erefPropertyHandler instanceof EReferencePropertyHandler) {
 					if (mappedProperty.getPersistentClass() != null) {
 						((EReferencePropertyHandler) erefPropertyHandler)
@@ -314,7 +313,7 @@ public class HbUtil {
 						ds.getPersistenceOptions().isMapEMapAsTrueMap());
 			} else {
 				// note also array types are going here!
-				final PropertyAccessor pa = ds.getHbContext().createEAttributeAccessor(eattr);
+				final PropertyAccess pa = ds.getHbContext().createEAttributeAccessor(eattr);
 				// note this check is necessary because maybe somebody override
 				// HBContext.createEAttributeAccessor
 				// to not return a EAttributePropertyHandler

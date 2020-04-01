@@ -29,7 +29,7 @@ import org.eclipse.emf.ecore.InternalEObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.teneo.PackageRegistryProvider;
 import org.eclipse.emf.teneo.hibernate.mapper.HbMapperConstants;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
@@ -77,7 +77,7 @@ public class ExternalType implements UserType, ParameterizedType {
 	}
 
 	public Object nullSafeGet(ResultSet resultSet, String[] names,
-			SessionImplementor sessionImplementor, Object owner) throws SQLException {
+			SharedSessionContractImplementor sessionImplementor, Object owner) throws SQLException {
 
 		final String data = resultSet.getString(names[0]);
 		if (data == null) {
@@ -93,7 +93,7 @@ public class ExternalType implements UserType, ParameterizedType {
 	}
 
 	public void nullSafeSet(PreparedStatement statement, Object value, int index,
-			SessionImplementor sessionImplementor) throws SQLException {
+			SharedSessionContractImplementor sessionImplementor) throws SQLException {
 		String pvalue = null;
 		if (value != null) {
 			final Resource res = ((InternalEObject) value).eResource();

@@ -21,12 +21,12 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.Setter;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.Setter;
 
 /**
  * DummyAccessor, does nothing.
@@ -34,31 +34,12 @@ import org.hibernate.property.Setter;
  * @author <a href="mailto:mtaal@elver.org">Martin Taal</a>
  * @version $Revision: 1.6 $
  */
-public class DummyPropertyHandler implements Getter, Setter, PropertyAccessor {
+public class DummyPropertyHandler
+		implements Getter, Setter, PropertyAccess, PropertyAccessStrategy {
 	/**
 	 * Generated Serial Version ID
 	 */
 	private static final long serialVersionUID = -5512925601236993580L;
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.hibernate.property.PropertyAccessor#getGetter(java.lang.Class, java.lang.String)
-	 */
-	@SuppressWarnings("rawtypes")
-	public Getter getGetter(Class theClass, String propertyName) throws PropertyNotFoundException {
-		return this;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.hibernate.property.PropertyAccessor#getSetter(java.lang.Class, java.lang.String)
-	 */
-	@SuppressWarnings("rawtypes")
-	public Setter getSetter(Class theClass, String propertyName) throws PropertyNotFoundException {
-		return this;
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -85,7 +66,7 @@ public class DummyPropertyHandler implements Getter, Setter, PropertyAccessor {
 	 * org.hibernate.engine.SessionImplementor)
 	 */
 	@SuppressWarnings("rawtypes")
-	public Object getForInsert(Object arg0, Map arg1, SessionImplementor arg2)
+	public Object getForInsert(Object arg0, Map arg1, SharedSessionContractImplementor arg2)
 			throws HibernateException {
 		return get(arg0);
 	}
@@ -126,5 +107,21 @@ public class DummyPropertyHandler implements Getter, Setter, PropertyAccessor {
 	 */
 	public void set(Object target, Object value, SessionFactoryImplementor factory)
 			throws HibernateException {
+	}
+
+	public Getter getGetter() {
+		return this;
+	}
+
+	public Setter getSetter() {
+		return this;
+	}
+
+	public PropertyAccessStrategy getPropertyAccessStrategy() {
+		return this;
+	}
+
+	public PropertyAccess buildPropertyAccess(Class arg0, String arg1) {
+		return this;
 	}
 }

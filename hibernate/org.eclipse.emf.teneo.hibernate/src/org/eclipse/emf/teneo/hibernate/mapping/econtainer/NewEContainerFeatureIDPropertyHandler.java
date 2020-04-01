@@ -37,12 +37,12 @@ import org.eclipse.emf.teneo.hibernate.mapping.econtainer.EContainerFeatureIDUse
 import org.eclipse.emf.teneo.util.AssertUtil;
 import org.eclipse.emf.teneo.util.FieldUtil;
 import org.hibernate.HibernateException;
-import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.Setter;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.Setter;
 
 /**
  * Handles the eContainerFeatureId field of an EObjectImpl.
@@ -51,7 +51,8 @@ import org.hibernate.property.Setter;
  * @version $Revision: 1.4 $
  */
 
-public class NewEContainerFeatureIDPropertyHandler implements PropertyAccessor, Getter, Setter,
+public class NewEContainerFeatureIDPropertyHandler
+		implements PropertyAccess, PropertyAccessStrategy, Getter, Setter,
 		ExtensionPoint {
 	/**
 	 * Generated Serial Version UID
@@ -69,11 +70,6 @@ public class NewEContainerFeatureIDPropertyHandler implements PropertyAccessor, 
 		ecField = FieldUtil.getField(EObjectImpl.class, "eContainerFeatureID");
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Getter getGetter(Class theClass, String propertyName) throws PropertyNotFoundException {
-		return this;
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -81,11 +77,6 @@ public class NewEContainerFeatureIDPropertyHandler implements PropertyAccessor, 
 	 */
 	public Member getMember() {
 		return null;
-	}
-
-	@SuppressWarnings("rawtypes")
-	public Setter getSetter(Class theClass, String propertyName) throws PropertyNotFoundException {
-		return this;
 	}
 
 	public Object get(Object owner) throws HibernateException {
@@ -100,7 +91,7 @@ public class NewEContainerFeatureIDPropertyHandler implements PropertyAccessor, 
 	}
 
 	@SuppressWarnings("rawtypes")
-	public Object getForInsert(Object owner, Map mergeMap, SessionImplementor session)
+	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return get(owner);
 	}
@@ -156,5 +147,21 @@ public class NewEContainerFeatureIDPropertyHandler implements PropertyAccessor, 
 
 	public Class<?> getReturnType() {
 		return EStructuralFeature.class;
+	}
+
+	public Getter getGetter() {
+		return this;
+	}
+
+	public Setter getSetter() {
+		return this;
+	}
+
+	public PropertyAccessStrategy getPropertyAccessStrategy() {
+		return this;
+	}
+
+	public PropertyAccess buildPropertyAccess(Class arg0, String arg1) {
+		return this;
 	}
 }
