@@ -7,3 +7,6 @@ http://www.eclipse.org/legal/epl-v10.html
 Contributors:
    Martin Taal
    Davide Marchignoli
+   Łukasz Drąg
+   Adrian Jaroszewicz
+   Paweł Gadecki
