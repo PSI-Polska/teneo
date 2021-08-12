@@ -213,6 +213,10 @@ public class IdentifierCacheHandler {
 				return this == key0;
 			}
 
+			// since we have no equals and hashcode methods overridden in EObjects,
+			// there is no other way of telling if Keys are equal than by comparing
+			// the value of both EObject's id attribute.
+			// This change was needed due to memory leaks in asm-execution, see PPLJLS-8839.
 			if (obj0 instanceof EObject && obj1 instanceof EObject) {
 				EObject eObject0 = (EObject) obj0;
 				EObject eObject1 = (EObject) obj1;
