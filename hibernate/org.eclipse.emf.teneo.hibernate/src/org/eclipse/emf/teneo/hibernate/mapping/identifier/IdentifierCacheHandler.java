@@ -18,6 +18,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EStructuralFeature;
 
 /**
  * Implements two maps for caching identifier and version information. Internally uses
@@ -209,6 +211,25 @@ public class IdentifierCacheHandler {
 			// weakreference already gone compare on keys itself
 			if (obj0 == null || obj1 == null) {
 				return this == key0;
+			}
+
+			// since we have no equals and hashcode methods overridden in EObjects,
+			// there is no other way of telling if Keys are equal than by comparing
+			// the value of both EObject's id attribute.
+			// This change was needed due to memory leaks in asm-execution, see PPLJLS-8839.
+			if (obj0 instanceof EObject && obj1 instanceof EObject) {
+				EObject eObject0 = (EObject) obj0;
+				EObject eObject1 = (EObject) obj1;
+
+				if (eObject0.eClass().equals(eObject1.eClass())) {
+					EStructuralFeature idFeature = eObject0.eClass().getEStructuralFeature("id");
+
+					if (idFeature != null) {
+						Object id0 = eObject0.eGet(idFeature);
+						Object id1 = eObject1.eGet(idFeature);
+						return id0.equals(id1);
+					}
+				}
 			}
 
 			// still present compare on values
