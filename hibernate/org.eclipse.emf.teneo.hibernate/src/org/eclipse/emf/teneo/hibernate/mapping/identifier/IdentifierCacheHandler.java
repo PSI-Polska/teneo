@@ -11,6 +11,7 @@ package org.eclipse.emf.teneo.hibernate.mapping.identifier;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -24,11 +25,20 @@ import org.eclipse.emf.ecore.EStructuralFeature;
 /**
  * Implements two maps for caching identifier and version information. Internally uses
  * weakreferences and periodic purge actions to clean the maps.
- * 
+ * <p>
+ * Because of memory leaks this class has been extended by supporting the EObject case:
+ * When the Key of the idMap is an EObject (that has no equals() method by design), each
+ * time a new version of this object is being added to this map, it is being added as a
+ * second entry (and it does not overwrite the old entry). This behavior has caused massive
+ * memory leaks - so in order to fix that, IdentifierCacheHandler.Key#equals and
+ * IdentifierCacheHandler.Key#hashcode have been modified. Right now when the Key is an
+ * EObject and it has the 'id' attribute (which represents the database id), the uniqueness
+ * of the Key is being based on this id and the name of the given EObject. Thanks to it, we
+ * no longer have duplicates in the idMap.
+ *
  * @author <a href="mailto:mtaal@elver.org">Martin Taal</a>
  * @version $Revision: 1.21 $
  */
-
 public class IdentifierCacheHandler {
 
 	private static final Log LOG = LogFactory.getLog(IdentifierCacheHandler.class);
@@ -37,12 +47,13 @@ public class IdentifierCacheHandler {
 	private static final String PURGING_PROPERTY = "org.eclipse.teneo.hibernate.identifierPurgingPeriod";
 	private static final int PURGING_PERIOD = Integer.parseInt(System.getProperty(PURGING_PROPERTY,
 			"" + DEFAULT_PURGING_PERIOD));
+	private static final String ID_FEATURE_NAME = "id";
 
 	private static final IdentifierCacheHandler INSTANCE = new IdentifierCacheHandler();
 
 	private Map<Key, Object> idMap = new ConcurrentHashMap<Key, Object>();
 	private Map<Key, Object> versionMap = new ConcurrentHashMap<Key, Object>();
-	
+
 	private IdentifierCacheCleaningRunnable idCacheCleaner;
 	private IdentifierCacheCleaningRunnable versionCacheCleaner;
 
@@ -88,7 +99,7 @@ public class IdentifierCacheHandler {
 
 	/** Get an identifier from the cache */
 	public Object getID(Object obj) {
-		final Object id = idMap.get(new Key(obj));
+		final Object id = idMap.get(createIdMapKey(obj));
 		if (id == null) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("ID for object " + obj.getClass().getName() + " not found in id cache");
@@ -101,18 +112,42 @@ public class IdentifierCacheHandler {
 		return id;
 	}
 
+	/** In case the object is an EObject, we look for its id and use the Key constructor that
+	 * supports the id attribute. */
+	private Key createIdMapKey(Object obj) {
+		if (obj instanceof EObject) {
+			EObject eObject = (EObject) obj;
+			EStructuralFeature idFeature = eObject.eClass().getEStructuralFeature(ID_FEATURE_NAME);
+
+			if (idFeature != null) {
+				Object idValue = eObject.eGet(idFeature);
+				if (idValue != null) {
+					return new Key(obj, idValue);
+				}
+			}
+		}
+		return new Key(obj);
+	}
+
 	/** Set an identifier in the cache */
 	public void setID(Object obj, Object id) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Setting id: " + id + " for object " + obj.getClass().getName() + " in idcache ");
 		}
 
+		Key key = new Key(obj, id);
 		if (id == null) { // actually a remove of the id
-			idMap.remove(new Key(obj));
+			idMap.remove(key);
 		} else if (useWeakReference(id)) {
-			idMap.put(new Key(obj), new WeakReference<Object>(id));
+			idMap.put(key, new WeakReference<Object>(id));
 		} else {
-			idMap.put(new Key(obj), id);
+			// since java.util.concurrent.ConcurrentHashMap.putVal method changes only the value,
+			// and in our case the key can be changed (e.g. the key is an EObject and one its
+			// attribute has been changed - but its id remains the same), we not only have to use the
+			// java.util.Map.put method, but also remove the given entry - so that we have a new
+			// version of the EObject as the key
+			idMap.remove(key);
+			idMap.put(key, id);
 		}
 
 		// also set the id in the resource
@@ -188,15 +223,34 @@ public class IdentifierCacheHandler {
 		/** The hashcode of the stored object */
 		private final int hashcode;
 
-		/** Constructor */
+		/** The id of the stored object */
+		private Object id;
+
+		/** Constructor, used when storing entries in the versionMap */
 		Key(Object keyObject) {
 			weakRef = new WeakReference<Object>(keyObject);
 			hashcode = keyObject.hashCode();
 		}
 
+		/** Constructor, used for storing entries in the idMap */
+		Key(Object keyObject, Object id) {
+			weakRef = new WeakReference<Object>(keyObject);
+			this.id = id;
+
+			// since we have no equals and hashcode methods overridden in EObjects,
+			// there is no other way of telling if Keys are equal than by comparing
+			// the value of both EObject's id attribute.
+			if (keyObject instanceof EObject) {
+				// the hashcode is based on the type of the object and its id
+				hashcode = Objects.hash(((EObject)keyObject).eClass().getName(), id);
+			} else {
+				hashcode = keyObject.hashCode();
+			}
+		}
+
 		/*
 		 * (non-Javadoc)
-		 * 
+		 *
 		 * @see java.lang.Object#equals(java.lang.Object)
 		 */
 		@Override
@@ -215,19 +269,19 @@ public class IdentifierCacheHandler {
 
 			// since we have no equals and hashcode methods overridden in EObjects,
 			// there is no other way of telling if Keys are equal than by comparing
-			// the value of both EObject's id attribute.
-			// This change was needed due to memory leaks in asm-execution, see PPLJLS-8839.
+			// the value of both EObject's id attribute (when it exists).
 			if (obj0 instanceof EObject && obj1 instanceof EObject) {
 				EObject eObject0 = (EObject) obj0;
 				EObject eObject1 = (EObject) obj1;
 
 				if (eObject0.eClass().equals(eObject1.eClass())) {
-					EStructuralFeature idFeature = eObject0.eClass().getEStructuralFeature("id");
+					EStructuralFeature idFeature = eObject0.eClass().getEStructuralFeature(ID_FEATURE_NAME);
 
 					if (idFeature != null) {
 						Object id0 = eObject0.eGet(idFeature);
-						Object id1 = eObject1.eGet(idFeature);
-						return id0.equals(id1);
+						if (id0 != null && id != null) {
+							return id0.equals(id);
+						}
 					}
 				}
 			}
